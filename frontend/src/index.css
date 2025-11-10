@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-rift-dark text-rift-gold font-league;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-rift-blue hover:bg-rift-blue/80 text-white font-bold py-3 px-6 rounded-lg 
+           transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
+  }
+  
+  .btn-secondary {
+    @apply bg-rift-purple hover:bg-rift-purple/80 text-rift-dark font-bold py-3 px-6 rounded-lg 
+           transition-all duration-300 transform hover:scale-105;
+  }
+  
+  .card {
+    @apply bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6 shadow-2xl 
+           border border-gray-700 hover:border-rift-blue transition-all duration-300;
+  }
+  
+  .stat-card {
+    @apply bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-lg p-4 
+           border border-blue-500/30 hover:border-blue-500/60 transition-all;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-rift-blue via-purple-400 to-rift-purple bg-clip-text text-transparent;
+  }
+  
+  .input-field {
+    @apply bg-gray-800 border-2 border-gray-700 focus:border-rift-blue 
+           rounded-lg px-4 py-3 text-white placeholder-gray-400 
+           transition-all outline-none;
+  }
+  
+  .loading-spinner {
+    @apply animate-spin rounded-full border-4 border-gray-700 border-t-rift-blue;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0AC8B9;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #08a095;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Glow effect */
+.glow {
+  box-shadow: 0 0 20px rgba(10, 200, 185, 0.5);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 30px rgba(10, 200, 185, 0.7);
+}
+
