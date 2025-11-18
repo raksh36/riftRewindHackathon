@@ -1,10 +1,9 @@
 import axios from 'axios'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+import { API_BASE_URL } from '../config/apiConfig'
 
 const api = axios.create({
-  baseURL: API_URL,
-  timeout: 120000, // Increased to 120 seconds for comprehensive analytics
+  baseURL: API_BASE_URL,
+  timeout: 180000, // 3 minutes for 20+ match analytics
   headers: {
     'Content-Type': 'application/json',
   },
