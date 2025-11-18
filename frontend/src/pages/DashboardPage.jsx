@@ -14,7 +14,7 @@ import HiddenGemsCard from '../components/HiddenGemsCard'
 import PersonalityCard from '../components/PersonalityCard'
 import ShareCard from '../components/ShareCard'
 import { generateShareImage, shareToTwitter, formatStatsForShare } from '../utils/shareUtils'
-import { getPlayerStats, generateInsights } from '../services/api'
+import { getPlayerStats } from '../services/api'
 
 function DashboardPage() {
   const { region, summonerName } = useParams()
@@ -28,10 +28,7 @@ function DashboardPage() {
   
   // Get data from location state or fetch it
   const [stats, setStats] = useState(location.state?.stats || null)
-  const [insights, setInsights] = useState(location.state?.insights || null)
-  const [hiddenGems, setHiddenGems] = useState(location.state?.hiddenGems || null)
-  const [personality, setPersonality] = useState(location.state?.personality || null)
-  const [roast, setRoast] = useState(location.state?.roast || null)
+  // All AI content (Insights, Personality, Hidden Gems, Roast) loads on-demand!
   const [isLoading, setIsLoading] = useState(!stats)
 
   useEffect(() => {
@@ -43,12 +40,8 @@ function DashboardPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true)
-      const [statsData, insightsData] = await Promise.all([
-        getPlayerStats(region, summonerName, 50),
-        generateInsights(region, summonerName, 50)
-      ])
+      const statsData = await getPlayerStats(region, summonerName, 20)
       setStats(statsData)
-      setInsights(insightsData)
     } catch (error) {
       toast.error('Failed to load data')
       navigate('/')
@@ -153,82 +146,70 @@ function DashboardPage() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Keep all tabs mounted to prevent re-loading */}
       <main className="container mx-auto px-4 py-8">
-        {activeTab === 'overview' && (
-          <div className="space-y-8">
-            <StatsOverview 
-              stats={stats?.stats} 
-              summonerName={summonerName}
-              enhancedAnalytics={stats?.enhanced_analytics}
-            />
-            <PerformanceChart stats={stats?.stats} />
-            <div ref={shareRef}>
-              <ShareCard stats={stats?.stats} summonerName={summonerName} />
-            </div>
+        {/* Overview Tab */}
+        <div className={`space-y-8 ${activeTab === 'overview' ? '' : 'hidden'}`}>
+          <StatsOverview 
+            stats={stats?.stats} 
+            summonerName={summonerName}
+            enhancedAnalytics={stats?.enhanced_analytics}
+          />
+          <PerformanceChart stats={stats?.stats} />
+          <div ref={shareRef}>
+            <ShareCard stats={stats?.stats} summonerName={summonerName} />
           </div>
-        )}
+        </div>
 
-        {activeTab === 'insights' && (
-          <div className="space-y-8">
-            <AIInsights insights={insights?.insights} />
-            {personality && <PersonalityCard personality={personality} />}
-          </div>
-        )}
+        {/* Insights Tab - Stays mounted, loads once */}
+        <div className={`space-y-8 ${activeTab === 'insights' ? '' : 'hidden'}`}>
+          <AIInsights region={region} summonerName={summonerName} preloadedInsights={null} />
+          <HiddenGemsCard region={region} summonerName={summonerName} preloadedGems={null} />
+          <PersonalityCard region={region} summonerName={summonerName} preloadedPersonality={null} />
+        </div>
 
-        {activeTab === 'champions' && (
-          <div className="space-y-8">
-            <ChampionMastery champions={stats?.stats?.topChampions || []} />
-          </div>
-        )}
+        {/* Champions Tab */}
+        <div className={`space-y-8 ${activeTab === 'champions' ? '' : 'hidden'}`}>
+          <ChampionMastery champions={stats?.stats?.topChampions || []} />
+        </div>
 
-        {activeTab === 'special' && (
-          <div className="space-y-8">
-            {/* Roast Section */}
-            <div className="card">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <Laugh className="w-6 h-6 text-rift-red" />
-                  <h2 className="text-2xl font-bold text-white">Roast Master 3000</h2>
-                </div>
-                <button
-                  onClick={() => setShowRoast(!showRoast)}
-                  className="btn-secondary"
-                >
-                  {showRoast ? 'Hide Roast' : 'Show Roast'}
-                </button>
+        {/* Special Tab */}
+        <div className={`space-y-8 ${activeTab === 'special' ? '' : 'hidden'}`}>
+          {/* Roast Section */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <Laugh className="w-6 h-6 text-rift-red" />
+                <h2 className="text-2xl font-bold text-white">Roast Master 3000</h2>
               </div>
-              {showRoast && <RoastCard roast={roast} stats={stats?.stats} />}
-            </div>
-
-            {/* Hidden Gems */}
-            {hiddenGems && (
-              <div className="card">
-                <div className="flex items-center space-x-3 mb-6">
-                  <Target className="w-6 h-6 text-rift-purple" />
-                  <h2 className="text-2xl font-bold text-white">Hidden Gems</h2>
-                </div>
-                <HiddenGemsCard gems={hiddenGems} />
-              </div>
-            )}
-
-            {/* Call to Action */}
-            <div className="card bg-gradient-to-r from-rift-blue/20 to-rift-purple/20 text-center">
-              <Lightbulb className="w-12 h-12 text-rift-blue mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-4">Want to Compare?</h3>
-              <p className="text-gray-300 mb-6">
-                See how you stack up against friends and discover duo synergies
-              </p>
               <button
-                onClick={() => navigate('/compare')}
-                className="btn-primary"
+                onClick={() => setShowRoast(!showRoast)}
+                className="btn-secondary"
               >
-                <Users className="w-5 h-5 inline mr-2" />
-                Compare with Friends
+                {showRoast ? 'Hide Roast' : 'Show Roast'}
               </button>
             </div>
+            {showRoast && <RoastCard region={region} summonerName={summonerName} stats={stats?.stats} />}
           </div>
-        )}
+
+          {/* Hidden Gems now load on-demand in Insights tab */}
+
+          {/* Call to Action */}
+          <div className="card bg-gradient-to-r from-rift-blue/20 to-rift-purple/20 text-center">
+            <Lightbulb className="w-12 h-12 text-rift-blue mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-4">Want to Compare?</h3>
+            <p className="text-gray-300 mb-6">
+              See how you stack up against friends and discover duo synergies
+            </p>
+            <button
+              onClick={() => navigate('/compare')}
+              className="btn-primary"
+            >
+              <Users className="w-5 h-5 inline mr-2" />
+              Compare with Friends
+            </button>
+          </div>
+        </div>
       </main>
     </div>
   )

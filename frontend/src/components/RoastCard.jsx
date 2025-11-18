@@ -1,45 +1,55 @@
-import { Flame, Laugh, Share2 } from 'lucide-react'
+import { Flame, Laugh, Share2, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { copyToClipboard } from '../utils/shareUtils'
+import { generateRoast } from '../services/api'
 
-function RoastCard({ roast, stats }) {
+function RoastCard({ region, summonerName, stats }) {
   const [showRoast, setShowRoast] = useState(false)
+  const [roastData, setRoastData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  // Generate funny roasts based on stats if no AI roast available
-  const generateFallbackRoast = () => {
-    if (!stats) return "You played League. That's roast-worthy enough."
-
-    const roasts = []
+  // Fetch roast on-demand
+  const handleLoadRoast = async () => {
+    setLoading(true)
+    setError(null)
     
-    if (stats.avgDeaths > 7) {
-      roasts.push(`With ${stats.avgDeaths} deaths per game, you're feeding more than a soup kitchen! 🍲`)
+    try {
+      const data = await generateRoast(region, summonerName, 20)
+      console.log('[Roast] Received data:', data)
+      setRoastData(data)
+      setShowRoast(true)
+      toast.success('🔥 Roast loaded! Prepare for maximum burn!')
+    } catch (err) {
+      console.error('Error loading roast:', err)
+      setError(err.message || 'Failed to load roast')
+      toast.error('Failed to generate roast. Try again!')
+    } finally {
+      setLoading(false)
     }
-    
-    if (stats.winRate < 45) {
-      roasts.push(`${stats.winRate}% win rate? Even a coin flip would perform better! 🪙`)
-    }
-    
-    if (stats.avgKDA < 2) {
-      roasts.push(`Your KDA is ${stats.avgKDA}. My grandmother has a better KDA in Candy Crush! 👵`)
-    }
-    
-    if (stats.recentTrend === 'Declining') {
-      roasts.push(`Your recent performance is declining faster than your LP! 📉`)
-    }
-
-    if (stats.totalGames > 500) {
-      roasts.push(`${stats.totalGames} games? Touch grass! Go outside! See the sun! ☀️`)
-    }
-
-    if (roasts.length === 0) {
-      roasts.push(`You're so good, I can't even roast you. Just kidding, you're average at best. 😏`)
-    }
-
-    return roasts.join('\n\n')
   }
 
-  const roastText = roast?.roast || roast?.content || generateFallbackRoast()
+  // Handle different roast formats from backend
+  const getRoastText = () => {
+    if (!roastData) return null
+    
+    // Backend returns { summoner: "...", roast: { roasts: [...] }, model_used: "..." }
+    const roastContent = roastData.roast || roastData
+    
+    // Check if roasts is an array
+    if (roastContent.roasts && Array.isArray(roastContent.roasts)) {
+      return roastContent.roasts.join('\n\n')
+    }
+    
+    // Fallback formats for string content
+    if (typeof roastContent === 'string') return roastContent
+    if (roastContent.content) return roastContent.content
+    
+    return null
+  }
+  
+  const roastText = getRoastText()
 
   const handleShare = () => {
     copyToClipboard(roastText)
@@ -53,19 +63,51 @@ function RoastCard({ roast, stats }) {
           <Flame className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
           <h3 className="text-2xl font-bold text-white mb-2">⚠️ Roast Zone ⚠️</h3>
           <p className="text-gray-400">
-            Warning: The following content may hurt your feelings (but it's all in good fun!)
+            {!showRoast 
+              ? "Click below to generate an AI roast (Warning: May cause emotional damage!)"
+              : "The following content may hurt your feelings (but it's all in good fun!)"}
           </p>
         </div>
 
-        {!showRoast ? (
+        {!showRoast && !error ? (
           <button
-            onClick={() => setShowRoast(true)}
-            className="btn-primary w-full bg-red-600 hover:bg-red-700"
+            onClick={handleLoadRoast}
+            disabled={loading}
+            className="btn-primary w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            <Laugh className="w-5 h-5 inline mr-2" />
-            Show Me The Roast
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 inline mr-2 animate-spin" />
+                Generating Epic Roast...
+              </>
+            ) : (
+              <>
+                <Laugh className="w-5 h-5 inline mr-2" />
+                Show Me The Roast
+              </>
+            )}
           </button>
-        ) : (
+        ) : error ? (
+          <div className="space-y-4">
+            <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-center">
+              <p className="text-red-400 mb-4">{error}</p>
+              <button
+                onClick={handleLoadRoast}
+                disabled={loading}
+                className="btn-primary bg-red-600 hover:bg-red-700"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 inline mr-2 animate-spin" />
+                    Retrying...
+                  </>
+                ) : (
+                  'Try Again'
+                )}
+              </button>
+            </div>
+          </div>
+        ) : showRoast && roastText ? (
           <div className="space-y-4">
             <div className="bg-gray-900/50 rounded-lg p-6 border border-red-500/30">
               <div className="text-lg text-gray-300 whitespace-pre-line leading-relaxed">
@@ -89,7 +131,7 @@ function RoastCard({ roast, stats }) {
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Roast Meter */}

@@ -1,30 +1,84 @@
-import { Brain, Swords, Shield, Users, Target, Zap } from 'lucide-react'
+import { Brain, Swords, Shield, Users, Target, Zap, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
+import { analyzePersonality } from '../services/api'
 
-function PersonalityCard({ personality }) {
-  // Generate fallback personality if not provided
-  const generateFallbackPersonality = () => {
-    return {
-      type: "The Strategist",
-      description: "You're a calculated player who thinks three steps ahead. You value map control and objective play over flashy mechanical outplays.",
-      traits: [
-        { name: "Aggression", value: 65, icon: <Swords className="w-5 h-5" /> },
-        { name: "Teamwork", value: 80, icon: <Users className="w-5 h-5" /> },
-        { name: "Mechanics", value: 70, icon: <Target className="w-5 h-5" /> },
-        { name: "Strategy", value: 85, icon: <Brain className="w-5 h-5" /> },
-        { name: "Adaptability", value: 75, icon: <Zap className="w-5 h-5" /> },
-        { name: "Consistency", value: 72, icon: <Shield className="w-5 h-5" /> }
-      ],
-      strengths: [
-        "Excellent map awareness and objective control",
-        "Strong team fighting presence",
-        "Adapts well to different team compositions"
-      ],
-      celebrity: "Faker",
-      playstyle: "Macro-focused team player"
+function PersonalityCard({ region, summonerName, preloadedPersonality }) {
+  const [personality, setPersonality] = useState(preloadedPersonality || null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [hasAttempted, setHasAttempted] = useState(!!preloadedPersonality)
+
+  // Auto-load personality when component mounts (if not preloaded)
+  useEffect(() => {
+    if (!personality && !hasAttempted) {
+      handleLoadPersonality()
+    }
+  }, [])
+
+  const handleLoadPersonality = async () => {
+    setLoading(true)
+    setError(null)
+    setHasAttempted(true)
+    
+    try {
+      const data = await analyzePersonality(region, summonerName, 20)
+      console.log('[Personality] Received data:', data)
+      // Extract the personality object from the response if nested
+      setPersonality(data?.personality || data)
+      toast.success('🧠 Personality analysis complete!')
+    } catch (err) {
+      console.error('Error loading personality:', err)
+      setError(err.message || 'Failed to load personality')
+      toast.error('Failed to analyze personality')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const profile = personality?.personality || personality || generateFallbackPersonality()
+  if (loading) {
+    return (
+      <div className="card text-center py-12">
+        <Loader2 className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-spin" />
+        <p className="text-gray-300 text-lg mb-2">Analyzing your personality...</p>
+        <p className="text-gray-500 text-sm">AI is discovering your unique playstyle</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="card text-center py-12">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-red-400 mb-4">{error}</p>
+        <button
+          onClick={handleLoadPersonality}
+          className="btn-primary"
+        >
+          Try Again
+        </button>
+      </div>
+    )
+  }
+
+  const profile = personality?.personality || personality
+  
+  // Don't render if no personality data
+  if (!profile || !profile.type) {
+    return (
+      <div className="card text-center py-12">
+        <Brain className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+        <p className="text-gray-400 mb-4">Personality analysis not loaded</p>
+        <button
+          onClick={handleLoadPersonality}
+          className="btn-primary"
+        >
+          <Brain className="w-5 h-5 inline mr-2" />
+          Analyze Personality
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

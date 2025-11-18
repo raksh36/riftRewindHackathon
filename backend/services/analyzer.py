@@ -94,6 +94,28 @@ class MatchAnalyzer:
         total_kills = 0
         total_deaths = 0
         total_assists = 0
+        total_cs = 0
+        total_gold = 0
+        total_game_duration = 0
+        total_vision_score = 0
+        total_damage_dealt = 0
+        total_damage_taken = 0
+        total_healing = 0
+        total_damage_mitigated = 0
+        total_dragons = 0
+        total_barons = 0
+        total_turrets = 0
+        total_inhibitors = 0
+        
+        # Team contribution tracking
+        total_damage_share = 0
+        total_gold_share = 0
+        total_kill_participation = 0
+        
+        # Game phase tracking
+        early_game_wins = 0  # wins where player had gold lead at 15min
+        early_game_count = 0
+        game_phase_kda = {'early': [], 'mid': [], 'late': []}
         
         best_game = None
         best_kda = 0
@@ -162,10 +184,64 @@ class MatchAnalyzer:
             total_kills += kills
             total_deaths += deaths
             total_assists += assists
+            total_cs += player_data.get('totalMinionsKilled', 0) + player_data.get('neutralMinionsKilled', 0)
+            total_gold += player_data.get('goldEarned', 0)
+            total_game_duration += info.get('gameDuration', 0)
+            total_vision_score += player_data.get('visionScore', 0)
+            total_damage_dealt += player_data.get('totalDamageDealtToChampions', 0)
+            total_damage_taken += player_data.get('totalDamageTaken', 0)
+            total_healing += player_data.get('totalHealsOnTeammates', 0) + player_data.get('totalHeal', 0)
+            total_damage_mitigated += player_data.get('damageSelfMitigated', 0)
+            total_dragons += player_data.get('dragonKills', 0)
+            total_barons += player_data.get('baronKills', 0)
+            total_turrets += player_data.get('turretKills', 0)
+            total_inhibitors += player_data.get('inhibitorKills', 0)
             
             # Special achievements
             pentakills += player_data.get('pentaKills', 0)
             quadrakills += player_data.get('quadraKills', 0)
+            
+            # Team contribution calculations
+            team_id = player_data.get('teamId')
+            team_damage = 0
+            team_gold = 0
+            team_kills = 0
+            
+            # Calculate team totals
+            for participant in participants:
+                if participant.get('teamId') == team_id:
+                    team_damage += participant.get('totalDamageDealtToChampions', 0)
+                    team_gold += participant.get('goldEarned', 0)
+                    team_kills += participant.get('kills', 0)
+            
+            # Calculate player's share (avoid division by zero)
+            if team_damage > 0:
+                damage_share = (player_data.get('totalDamageDealtToChampions', 0) / team_damage) * 100
+                total_damage_share += damage_share
+            
+            if team_gold > 0:
+                gold_share = (player_data.get('goldEarned', 0) / team_gold) * 100
+                total_gold_share += gold_share
+            
+            if team_kills > 0:
+                kill_participation = ((kills + assists) / team_kills) * 100
+                total_kill_participation += min(kill_participation, 100)  # Cap at 100%
+            
+            # Game phase performance (based on game duration)
+            game_duration = info.get('gameDuration', 0)
+            if game_duration > 0:
+                if game_duration <= 900:  # 0-15 minutes
+                    game_phase_kda['early'].append(kda)
+                elif game_duration <= 1500:  # 15-25 minutes
+                    game_phase_kda['mid'].append(kda)
+                else:  # 25+ minutes
+                    game_phase_kda['late'].append(kda)
+                
+                # Track early game snowball (gold at 15min - using goldEarned as proxy)
+                if won and player_data.get('goldEarned', 0) > 4500:  # Rough early gold lead indicator
+                    early_game_wins += 1
+                if player_data.get('goldEarned', 0) > 4500:
+                    early_game_count += 1
         
         # Calculate aggregated stats
         win_rate = (total_wins / total_games * 100) if total_games > 0 else 0
@@ -206,6 +282,12 @@ class MatchAnalyzer:
         
         trend = "Improving" if recent_wr > win_rate else "Declining" if recent_wr < win_rate else "Stable"
         
+        # Calculate game phase performance metrics
+        early_game_perf = round(statistics.mean(game_phase_kda['early']), 2) if game_phase_kda['early'] else 0
+        mid_game_perf = round(statistics.mean(game_phase_kda['mid']), 2) if game_phase_kda['mid'] else 0
+        late_game_perf = round(statistics.mean(game_phase_kda['late']), 2) if game_phase_kda['late'] else 0
+        snowball_rate = round((early_game_wins / early_game_count * 100), 1) if early_game_count > 0 else 0
+        
         return {
             'totalGames': total_games,
             'totalWins': total_wins,
@@ -215,16 +297,36 @@ class MatchAnalyzer:
             'avgKills': round(total_kills / total_games, 1),
             'avgDeaths': round(total_deaths / total_games, 1),
             'avgAssists': round(total_assists / total_games, 1),
+            'avgCS': round(total_cs / total_games, 1) if total_games > 0 else 0,
+            'avgGold': round(total_gold / total_games, 0) if total_games > 0 else 0,
+            'avgGameDuration': round(total_game_duration / total_games, 0) if total_games > 0 else 0,
+            'avgVisionScore': round(total_vision_score / total_games, 1) if total_games > 0 else 0,
+            'avgDamageDealt': round(total_damage_dealt / total_games, 0) if total_games > 0 else 0,
+            'avgDamageTaken': round(total_damage_taken / total_games, 0) if total_games > 0 else 0,
+            'avgHealing': round(total_healing / total_games, 0) if total_games > 0 else 0,
+            'avgDamageMitigated': round(total_damage_mitigated / total_games, 0) if total_games > 0 else 0,
+            'avgDragonKills': round(total_dragons / total_games, 2) if total_games > 0 else 0,
+            'avgBaronKills': round(total_barons / total_games, 2) if total_games > 0 else 0,
+            'avgTurretKills': round(total_turrets / total_games, 2) if total_games > 0 else 0,
+            'avgInhibitorKills': round(total_inhibitors / total_games, 2) if total_games > 0 else 0,
+            # Team Contribution
+            'avgDamageShare': round(total_damage_share / total_games, 1) if total_games > 0 else 0,
+            'avgGoldShare': round(total_gold_share / total_games, 1) if total_games > 0 else 0,
+            'avgKillParticipation': round(total_kill_participation / total_games, 1) if total_games > 0 else 0,
+            # Game Phase Performance
+            'earlyGamePerformance': early_game_perf,
+            'midGamePerformance': mid_game_perf,
+            'lateGamePerformance': late_game_perf,
+            'snowballRate': snowball_rate,
             'topChampions': top_champions,
             'roleDistribution': dict(role_distribution),
             'mostPlayedRole': most_played_role,
             'bestPerformance': best_game,
+            'bestGameKDA': best_kda,
+            'pentakills': pentakills,
+            'quadrakills': quadrakills,
             'recentTrend': trend,
             'recentWinRate': round(recent_wr, 1),
-            'achievements': {
-                'pentakills': pentakills,
-                'quadrakills': quadrakills
-            },
             'monthlyPerformance': dict(monthly_performance)
         }
     
@@ -244,12 +346,38 @@ class MatchAnalyzer:
             'totalLosses': 0,
             'winRate': 0,
             'avgKDA': 0,
+            'avgKills': 0,
+            'avgDeaths': 0,
+            'avgAssists': 0,
+            'avgCS': 0,
+            'avgGold': 0,
+            'avgGameDuration': 0,
+            'avgVisionScore': 0,
+            'avgDamageDealt': 0,
+            'avgDamageTaken': 0,
+            'avgHealing': 0,
+            'avgDamageMitigated': 0,
+            'avgDragonKills': 0,
+            'avgBaronKills': 0,
+            'avgTurretKills': 0,
+            'avgInhibitorKills': 0,
+            'avgDamageShare': 0,
+            'avgGoldShare': 0,
+            'avgKillParticipation': 0,
+            'earlyGamePerformance': 0,
+            'midGamePerformance': 0,
+            'lateGamePerformance': 0,
+            'snowballRate': 0,
             'topChampions': [],
             'roleDistribution': {},
             'mostPlayedRole': 'Unknown',
             'bestPerformance': None,
+            'bestGameKDA': 0,
+            'pentakills': 0,
+            'quadrakills': 0,
             'recentTrend': 'Unknown',
-            'achievements': {'pentakills': 0, 'quadrakills': 0}
+            'recentWinRate': 0,
+            'monthlyPerformance': {}
         }
 
 

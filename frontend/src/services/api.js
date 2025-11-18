@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 120000, // Increased to 120 seconds for comprehensive analytics
+  timeout: 180000, // 3 minutes for 30-match analytics
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,11 +32,6 @@ api.interceptors.response.use(
 // API methods
 export const getRegions = async () => {
   const response = await api.get('/api/regions')
-  return response.data
-}
-
-export const getDemoData = async () => {
-  const response = await api.get('/api/demo/player')
   return response.data
 }
 

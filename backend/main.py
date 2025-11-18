@@ -15,7 +15,6 @@ from services.pattern_detector import PatternDetector
 from services.model_selector import model_selector
 from services.advanced_analytics import rank_analyzer, timeline_analyzer, challenge_analyzer
 from services.additional_analytics import clash_analyzer, mastery_analyzer, free_champion_analyzer, challenge_config_analyzer
-from demo_data import get_demo_player_data
 from models.schemas import (
     PlayerSearchRequest,
     PlayerStatsResponse,
@@ -283,6 +282,14 @@ async def generate_insights(request: PlayerSearchRequest):
             count=request.matchCount or 20
         )
         
+        # Derive display name
+        if "gameName" in summoner and "tagLine" in summoner:
+            display_name = f"{summoner['gameName']}#{summoner['tagLine']}"
+        elif "name" in summoner:
+            display_name = summoner["name"]
+        else:
+            display_name = request.summonerName
+        
         # Analyze matches
         stats = analyzer.analyze_matches(matches, summoner["puuid"])
         
@@ -332,23 +339,6 @@ async def get_regions():
     }
 
 
-@app.get("/api/demo/player")
-async def get_demo_player():
-    """
-    Get demo player data without calling Riot API
-    
-    Perfect for:
-    - Testing the UI
-    - Recording demo videos
-    - Showing all features
-    - Hackathon presentations
-    
-    Returns:
-        Comprehensive demo data with all analytics
-    """
-    return get_demo_player_data()
-
-
 @app.post("/api/roast")
 async def generate_roast(request: PlayerSearchRequest):
     """
@@ -377,10 +367,18 @@ async def generate_roast(request: PlayerSearchRequest):
             count=request.matchCount or 30
         )
         
+        # Derive display name
+        if "gameName" in summoner and "tagLine" in summoner:
+            display_name = f"{summoner['gameName']}#{summoner['tagLine']}"
+        elif "name" in summoner:
+            display_name = summoner["name"]
+        else:
+            display_name = request.summonerName
+        
         # Analyze matches
         stats = analyzer.analyze_matches(matches, summoner["puuid"])
         
-        # Generate roast using Nova Lite (cost-effective creative content)
+        # Generate roast using Claude Haiku (reliable creative content)
         roast = await bedrock_service.generate_roast(
             summoner_name=display_name,
             stats=stats
@@ -389,7 +387,7 @@ async def generate_roast(request: PlayerSearchRequest):
         return {
             "summoner": display_name,
             "roast": roast,
-            "model_used": "amazon.nova-lite-v1:0"
+            "model_used": "anthropic.claude-3-haiku-20240307-v1:0"
         }
         
     except HTTPException:
@@ -428,6 +426,14 @@ async def discover_hidden_gems(request: PlayerSearchRequest):
             puuid=summoner["puuid"],
             count=request.matchCount or 50
         )
+        
+        # Derive display name
+        if "gameName" in summoner and "tagLine" in summoner:
+            display_name = f"{summoner['gameName']}#{summoner['tagLine']}"
+        elif "name" in summoner:
+            display_name = summoner["name"]
+        else:
+            display_name = request.summonerName
         
         # Analyze matches
         stats = analyzer.analyze_matches(matches, summoner["puuid"])
@@ -484,6 +490,14 @@ async def analyze_personality(request: PlayerSearchRequest):
             puuid=summoner["puuid"],
             count=request.matchCount or 40
         )
+        
+        # Derive display name
+        if "gameName" in summoner and "tagLine" in summoner:
+            display_name = f"{summoner['gameName']}#{summoner['tagLine']}"
+        elif "name" in summoner:
+            display_name = summoner["name"]
+        else:
+            display_name = request.summonerName
         
         # Analyze matches
         stats = analyzer.analyze_matches(matches, summoner["puuid"])

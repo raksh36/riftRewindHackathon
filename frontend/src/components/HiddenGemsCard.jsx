@@ -1,37 +1,84 @@
-import { Gem, TrendingUp, Clock, Calendar, Zap } from 'lucide-react'
+import { Gem, TrendingUp, Clock, Calendar, Zap, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
+import { discoverHiddenGems } from '../services/api'
 
-function HiddenGemsCard({ gems }) {
-  // Generate interesting insights from stats if no AI gems available
-  const generateFallbackGems = () => {
-    return [
-      {
-        title: "Peak Performance Time",
-        description: "You tend to perform best during evening hours (6-10 PM). Your win rate is 8% higher during this time!",
-        icon: <Clock className="w-6 h-6" />,
-        color: "from-blue-500 to-cyan-500"
-      },
-      {
-        title: "Weekend Warrior",
-        description: "Your Saturday games have a 12% higher win rate than weekdays. Maybe you're more relaxed?",
-        icon: <Calendar className="w-6 h-6" />,
-        color: "from-purple-500 to-pink-500"
-      },
-      {
-        title: "Comeback King",
-        description: "You have a 67% win rate in games where you were behind at 15 minutes. Never give up!",
-        icon: <TrendingUp className="w-6 h-6" />,
-        color: "from-green-500 to-emerald-500"
-      },
-      {
-        title: "Role Flexibility",
-        description: "You play 3+ roles regularly. Flex players have 15% better adaptation to meta changes!",
-        icon: <Zap className="w-6 h-6" />,
-        color: "from-yellow-500 to-orange-500"
-      }
-    ]
+function HiddenGemsCard({ region, summonerName, preloadedGems }) {
+  const [gems, setGems] = useState(preloadedGems || null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [hasAttempted, setHasAttempted] = useState(!!preloadedGems)
+
+  // Auto-load gems when component mounts (if not preloaded)
+  useEffect(() => {
+    if (!gems && !hasAttempted) {
+      handleLoadGems()
+    }
+  }, [])
+
+  const handleLoadGems = async () => {
+    setLoading(true)
+    setError(null)
+    setHasAttempted(true)
+    
+    try {
+      const data = await discoverHiddenGems(region, summonerName, 20)
+      console.log('[HiddenGems] Received data:', data)
+      // Extract the gems object from the response if nested
+      setGems(data?.discoveries || data?.gems || data)
+      toast.success('💎 Hidden patterns discovered!')
+    } catch (err) {
+      console.error('Error loading hidden gems:', err)
+      setError(err.message || 'Failed to load hidden gems')
+      toast.error('Failed to discover hidden patterns')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const gemsList = gems?.discoveries || gems?.gems || generateFallbackGems()
+  if (loading) {
+    return (
+      <div className="card text-center py-12">
+        <Loader2 className="w-12 h-12 text-rift-purple mx-auto mb-4 animate-spin" />
+        <p className="text-gray-300 text-lg mb-2">Discovering hidden patterns...</p>
+        <p className="text-gray-500 text-sm">AI is analyzing your unique gameplay</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="card text-center py-12">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-red-400 mb-4">{error}</p>
+        <button
+          onClick={handleLoadGems}
+          className="btn-primary"
+        >
+          Try Again
+        </button>
+      </div>
+    )
+  }
+
+  const gemsList = gems?.discoveries || gems?.gems
+  
+  // Don't render if no gems data
+  if (!gemsList || gemsList.length === 0) {
+    return (
+      <div className="card text-center py-12">
+        <Gem className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+        <p className="text-gray-400 mb-4">Hidden gems not loaded</p>
+        <button
+          onClick={handleLoadGems}
+          className="btn-primary"
+        >
+          <Gem className="w-5 h-5 inline mr-2" />
+          Discover Patterns
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

@@ -22,15 +22,17 @@ class ModelSelector:
         "amazon.nova-micro-v1:0": {"input": 0.035, "output": 0.14, "name": "Nova Micro"},
         "amazon.nova-lite-v1:0": {"input": 0.06, "output": 0.24, "name": "Nova Lite"},
         "anthropic.claude-3-haiku-20240307-v1:0": {"input": 0.25, "output": 1.25, "name": "Claude Haiku"},
+        "anthropic.claude-sonnet-4-20250514-v1:0": {"input": 3.00, "output": 15.00, "name": "Claude Sonnet 4"},
+        "deepseek.v3-v1:0": {"input": 0.27, "output": 1.10, "name": "DeepSeek V3"},
         "amazon.nova-pro-v1:0": {"input": 0.80, "output": 3.20, "name": "Nova Pro"}
     }
     
     TASK_MODEL_MAP = {
         "quick_summary": "amazon.nova-micro-v1:0",      # Cheapest for simple summaries
-        "roast": "amazon.nova-lite-v1:0",                # Good creative writing at low cost
+        "roast": "amazon.nova-lite-v1:0",                # Good creative writing, no approval needed
         "personality": "amazon.nova-lite-v1:0",          # Good for structured creative output
-        "deep_analysis": "anthropic.claude-3-haiku-20240307-v1:0",  # Best reasoning
-        "hidden_gems": "anthropic.claude-3-haiku-20240307-v1:0",    # Needs pattern recognition
+        "deep_analysis": "amazon.nova-lite-v1:0",        # Decent reasoning
+        "hidden_gems": "amazon.nova-lite-v1:0",          # Pattern recognition
         "comparison": "amazon.nova-lite-v1:0"            # Good for comparisons
     }
     

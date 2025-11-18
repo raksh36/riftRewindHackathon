@@ -35,6 +35,10 @@ function PerformanceChart({ stats }) {
     return data.games > 0 ? ((data.wins / data.games) * 100).toFixed(1) : 0
   })
 
+  console.log('[PerformanceChart] monthlyData:', monthlyData)
+  console.log('[PerformanceChart] months:', months)
+  console.log('[PerformanceChart] winRates:', winRates)
+
   // Line chart configuration
   const lineChartData = {
     labels: months.map(m => {
@@ -49,8 +53,8 @@ function PerformanceChart({ stats }) {
         backgroundColor: 'rgba(10, 200, 185, 0.1)',
         fill: true,
         tension: 0.4,
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        pointRadius: months.length === 1 ? 10 : 5, // Larger point if only 1 month
+        pointHoverRadius: months.length === 1 ? 12 : 7,
         pointBackgroundColor: '#0AC8B9',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
@@ -165,9 +169,27 @@ function PerformanceChart({ stats }) {
       {/* Win Rate Trend */}
       <div className="card">
         <h2 className="text-2xl font-bold text-white mb-6">Performance Over Time</h2>
-        <div className="h-80">
-          <Line data={lineChartData} options={lineChartOptions} />
-        </div>
+        {months.length > 0 ? (
+          <>
+            <div className="h-80">
+              <Line data={lineChartData} options={lineChartOptions} />
+            </div>
+            {months.length === 1 && (
+              <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <p className="text-sm text-blue-300">
+                  💡 <strong>Tip:</strong> Play games across multiple months to see your performance trend line!
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="h-80 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-gray-400 text-lg mb-2">Not enough data to display trend</p>
+              <p className="text-gray-500 text-sm">Play more games to see your performance over time!</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Role Distribution */}

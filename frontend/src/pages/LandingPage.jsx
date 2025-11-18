@@ -39,14 +39,10 @@ function LandingPage() {
 
     setIsLoading(true)
     
-    // Navigate to loading page which will handle the data fetching
-    navigate(`/loading?region=${region}&summoner=${encodeURIComponent(summonerName)}`)
+    // Navigate to loading page which will handle the data fetching (trim whitespace)
+    navigate(`/loading?region=${region}&summoner=${encodeURIComponent(summonerName.trim())}`)
   }
 
-  const handleDemo = () => {
-    // Navigate directly to loading page with demo flag
-    navigate('/loading?demo=true')
-  }
 
   const features = [
     {
@@ -163,16 +159,6 @@ function LandingPage() {
                 )}
               </button>
               
-              <button
-                type="button"
-                onClick={handleDemo}
-                className="btn-secondary w-full mt-3 border-2 border-rift-gold text-rift-gold hover:bg-rift-gold hover:text-rift-dark"
-              >
-                <span className="flex items-center justify-center">
-                  <Gamepad2 className="w-5 h-5 mr-2" />
-                  View Demo (No Account Needed)
-                </span>
-              </button>
             </div>
           </form>
         </div>
@@ -182,12 +168,18 @@ function LandingPage() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="card animate-slide-up"
+              className="card hover-lift card-interactive animate-slide-up group"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="text-rift-blue mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-              <p className="text-gray-400">{feature.description}</p>
+              <div className="text-rift-blue mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2 group-hover:text-rift-blue transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-gray-400 group-hover:text-gray-300 transition-colors">
+                {feature.description}
+              </p>
             </div>
           ))}
         </div>

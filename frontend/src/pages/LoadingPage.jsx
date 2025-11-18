@@ -1,21 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Loader2, Sparkles, TrendingUp, Award, Brain } from 'lucide-react'
-import { getPlayerStats, generateInsights, generateRoast, discoverHiddenGems, analyzePersonality, getDemoData } from '../services/api'
+import { getPlayerStats } from '../services/api'
 import toast from 'react-hot-toast'
 
 function LoadingPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const region = searchParams.get('region')
-  const summonerName = searchParams.get('summoner')
-  const isDemo = searchParams.get('demo') === 'true'
+  const summonerName = searchParams.get('summoner')?.trim()
   
   const [progress, setProgress] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
 
   const steps = [
-    { icon: <Loader2 className="w-6 h-6 animate-spin" />, text: isDemo ? 'Loading demo data...' : 'Fetching match history...' },
+    { icon: <Loader2 className="w-6 h-6 animate-spin" />, text: 'Fetching match history...' },
     { icon: <TrendingUp className="w-6 h-6" />, text: 'Analyzing statistics...' },
     { icon: <Brain className="w-6 h-6" />, text: 'Generating AI insights...' },
     { icon: <Sparkles className="w-6 h-6" />, text: 'Discovering hidden patterns...' },
@@ -23,107 +22,38 @@ function LoadingPage() {
   ]
 
   useEffect(() => {
-    // Demo mode doesn't need region/summoner
-    if (!isDemo && (!region || !summonerName)) {
+    if (!region || !summonerName) {
       navigate('/')
       return
     }
 
     fetchAllData()
-  }, [region, summonerName, isDemo])
+  }, [region, summonerName])
 
   const fetchAllData = async () => {
     try {
-      // DEMO MODE: Fast path with mock data
-      if (isDemo) {
-        setCurrentStep(0)
-        setProgress(20)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        setCurrentStep(1)
-        setProgress(40)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        setCurrentStep(2)
-        setProgress(60)
-        const demoData = await getDemoData()
-        
-        setCurrentStep(3)
-        setProgress(80)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        setCurrentStep(4)
-        setProgress(100)
-        
-        // Navigate to dashboard with demo data
-        setTimeout(() => {
-          navigate(`/dashboard/demo/DemoPlayer`, {
-            state: {
-              stats: demoData,
-              insights: {
-                insights: {
-                  narrative: "Welcome to the demo! This showcases all features with sample data. In a real session, this would be your personalized year-end recap powered by AWS Bedrock AI.",
-                  strengths: ["Consistent performance", "Strong laning phase", "Excellent teamwork"],
-                  weaknesses: ["Late game decision making", "Objective control timing"],
-                  recommendations: ["Focus on macro gameplay", "Practice late game scenarios"]
-                }
-              }
-            }
-          })
-        }, 500)
-        return
-      }
-      
-      // NORMAL MODE: Real API calls
-      // Step 1: Fetch player stats
+      // Step 1: Fetch player stats ONLY (super fast!)
       setCurrentStep(0)
-      setProgress(20)
-      const statsData = await getPlayerStats(region, summonerName, 50)
+      setProgress(30)
+      const statsData = await getPlayerStats(region, summonerName, 20)
       
-      // Step 2: Analyze
+      // Step 2: Processing complete
       setCurrentStep(1)
-      setProgress(40)
-      await new Promise(resolve => setTimeout(resolve, 500))
+      setProgress(80)
       
-      // Step 3: Generate AI insights
-      setCurrentStep(2)
-      setProgress(60)
-      const insightsData = await generateInsights(region, summonerName, 50)
+      // All AI content (insights, roast, hidden gems, personality) loads on-demand!
       
-      // Step 4: Get hidden gems (run in parallel with other features)
-      setCurrentStep(3)
-      setProgress(75)
-      const [hiddenGems, personality] = await Promise.allSettled([
-        discoverHiddenGems(region, summonerName, 50),
-        analyzePersonality(region, summonerName, 50)
-      ])
-      
-      // Step 5: Finalize
       setCurrentStep(4)
-      setProgress(90)
-      
-      // Optional: Get roast (can fail gracefully)
-      let roastData = null
-      try {
-        roastData = await generateRoast(region, summonerName, 50)
-      } catch (error) {
-        console.log('Roast generation optional - skipping')
-      }
-      
       setProgress(100)
       
-      // Navigate to dashboard with all data
+      // Navigate to dashboard immediately (all AI loads on-demand)
       setTimeout(() => {
         navigate(`/dashboard/${region}/${encodeURIComponent(summonerName)}`, {
           state: {
-            stats: statsData,
-            insights: insightsData,
-            hiddenGems: hiddenGems.status === 'fulfilled' ? hiddenGems.value : null,
-            personality: personality.status === 'fulfilled' ? personality.value : null,
-            roast: roastData
+            stats: statsData
           }
         })
-      }, 500)
+      }, 300)
       
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -133,13 +63,22 @@ function LoadingPage() {
   }
 
   return (
-    <div className="min-h-screen hero-gradient flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full">
-        <div className="card text-center">
+    <div className="min-h-screen hero-gradient flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated background particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute w-96 h-96 bg-rift-blue/10 rounded-full blur-3xl animate-pulse top-0 -left-48"></div>
+        <div className="absolute w-96 h-96 bg-rift-purple/10 rounded-full blur-3xl animate-pulse bottom-0 -right-48 delay-700"></div>
+      </div>
+      
+      <div className="max-w-2xl w-full relative z-10">
+        <div className="card text-center glow-pulse animate-fade-in">
           {/* Progress Circle */}
           <div className="mb-8">
             <div className="relative w-32 h-32 mx-auto">
-              <svg className="transform -rotate-90 w-32 h-32">
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 rounded-full bg-rift-blue/20 blur-xl animate-pulse"></div>
+              
+              <svg className="transform -rotate-90 w-32 h-32 relative z-10">
                 <circle
                   cx="64"
                   cy="64"
@@ -158,25 +97,30 @@ function LoadingPage() {
                   fill="none"
                   strokeDasharray={2 * Math.PI * 56}
                   strokeDashoffset={2 * Math.PI * 56 * (1 - progress / 100)}
-                  className="text-rift-blue transition-all duration-500"
+                  className="text-rift-blue transition-all duration-500 drop-shadow-lg"
                   strokeLinecap="round"
+                  style={{
+                    filter: 'drop-shadow(0 0 8px rgba(10, 200, 185, 0.8))'
+                  }}
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">{progress}%</span>
+                <span className="text-3xl font-bold neon-text">{progress}%</span>
               </div>
             </div>
           </div>
 
           {/* Current Step */}
-          <div className="mb-8">
-            <div className="flex items-center justify-center text-rift-blue mb-2">
-              {steps[currentStep]?.icon}
+          <div className="mb-8 animate-slide-up">
+            <div className="flex items-center justify-center text-rift-blue mb-3 animate-bounce">
+              <div className="p-3 bg-rift-blue/20 rounded-full">
+                {steps[currentStep]?.icon}
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-3xl font-bold text-white mb-2 gradient-text">
               Analyzing {summonerName}
             </h2>
-            <p className="text-gray-400">{steps[currentStep]?.text}</p>
+            <p className="text-lg text-gray-300">{steps[currentStep]?.text}</p>
           </div>
 
           {/* Steps List */}
@@ -184,40 +128,54 @@ function LoadingPage() {
             {steps.map((step, index) => (
               <div
                 key={index}
-                className={`flex items-center space-x-3 p-3 rounded-lg transition-all ${
+                className={`flex items-center space-x-3 p-4 rounded-lg transition-all duration-500 transform ${
                   index < currentStep
-                    ? 'bg-green-900/20 border-green-500/50'
+                    ? 'bg-gradient-to-r from-green-900/30 to-green-800/20 border-green-500/60 scale-95 success-glow'
                     : index === currentStep
-                    ? 'bg-rift-blue/20 border-rift-blue/50'
-                    : 'bg-gray-800/20 border-gray-700/50'
-                } border`}
+                    ? 'bg-gradient-to-r from-rift-blue/30 to-blue-800/20 border-rift-blue/70 scale-100 glow-pulse'
+                    : 'bg-gray-800/20 border-gray-700/50 scale-95 opacity-60'
+                } border-2 hover:scale-100 hover:border-rift-blue/50`}
+                style={{
+                  animationDelay: `${index * 100}ms`
+                }}
               >
-                <div className={index <= currentStep ? 'text-rift-blue' : 'text-gray-600'}>
+                <div className={`${index <= currentStep ? 'text-rift-blue' : 'text-gray-600'} transition-all duration-300`}>
                   {index < currentStep ? (
-                    <Award className="w-5 h-5" />
+                    <div className="p-1 bg-green-500/20 rounded-full">
+                      <Award className="w-5 h-5 text-green-400" />
+                    </div>
                   ) : (
-                    step.icon
+                    <div className={index === currentStep ? 'animate-bounce' : ''}>
+                      {step.icon}
+                    </div>
                   )}
                 </div>
                 <span
-                  className={`flex-1 text-left ${
-                    index <= currentStep ? 'text-white' : 'text-gray-500'
+                  className={`flex-1 text-left font-medium transition-all duration-300 ${
+                    index < currentStep ? 'text-green-300' : 
+                    index === currentStep ? 'text-white' : 'text-gray-500'
                   }`}
                 >
                   {step.text}
                 </span>
                 {index < currentStep && (
-                  <span className="text-green-400">✓</span>
+                  <span className="text-2xl text-green-400 animate-bounce">✓</span>
+                )}
+                {index === currentStep && (
+                  <div className="loading-spinner w-5 h-5"></div>
                 )}
               </div>
             ))}
           </div>
 
           {/* Fun Facts */}
-          <div className="mt-8 p-4 bg-gray-800/30 rounded-lg">
-            <p className="text-sm text-gray-400 italic">
-              💡 Did you know? The average League player plays 300+ games per season!
-            </p>
+          <div className="mt-8 p-4 bg-gradient-to-r from-rift-blue/10 to-rift-purple/10 rounded-lg border border-rift-blue/30 glass-effect">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-2xl animate-bounce">💡</span>
+              <p className="text-sm text-gray-300 italic">
+                Did you know? The average League player plays 300+ games per season!
+              </p>
+            </div>
           </div>
         </div>
       </div>

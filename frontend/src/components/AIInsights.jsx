@@ -1,11 +1,81 @@
-import { Sparkles, TrendingUp, AlertCircle, Lightbulb, Award } from 'lucide-react'
+import { Sparkles, TrendingUp, AlertCircle, Lightbulb, Award, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
+import { generateInsights } from '../services/api'
 
-function AIInsights({ insights }) {
+function AIInsights({ region, summonerName, preloadedInsights }) {
+  const [insights, setInsights] = useState(preloadedInsights || null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [hasAttempted, setHasAttempted] = useState(!!preloadedInsights)
+
+  // Auto-load insights when component mounts (if not preloaded)
+  useEffect(() => {
+    if (!insights && !hasAttempted && region && summonerName) {
+      handleLoadInsights()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleLoadInsights = async () => {
+    console.log('[AIInsights] Starting to load insights for:', summonerName, region)
+    setLoading(true)
+    setError(null)
+    setHasAttempted(true)
+    
+    try {
+      const data = await generateInsights(region, summonerName, 20)
+      console.log('[AIInsights] Received data:', data)
+      console.log('[AIInsights] Insights object:', data?.insights)
+      // Extract the insights object from the response
+      setInsights(data?.insights || data)
+      toast.success('✨ AI Insights loaded!')
+    } catch (err) {
+      console.error('[AIInsights] Error loading insights:', err)
+      setError(err.message || 'Failed to load insights')
+      toast.error('Failed to generate insights')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="card text-center py-12">
+        <Loader2 className="w-12 h-12 text-rift-blue mx-auto mb-4 animate-spin" />
+        <p className="text-gray-300 text-lg mb-2">Analyzing your gameplay...</p>
+        <p className="text-gray-500 text-sm">AI is processing your match history</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="card text-center py-12">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-red-400 mb-4">{error}</p>
+        <button
+          onClick={handleLoadInsights}
+          className="btn-primary"
+        >
+          Try Again
+        </button>
+      </div>
+    )
+  }
+
   if (!insights) {
     return (
       <div className="card text-center py-12">
         <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-        <p className="text-gray-400">No AI insights available</p>
+        <p className="text-gray-400 mb-4">AI Insights not loaded</p>
+        <button
+          onClick={handleLoadInsights}
+          className="btn-primary"
+        >
+          <Sparkles className="w-5 h-5 inline mr-2" />
+          Generate Insights
+        </button>
       </div>
     )
   }
