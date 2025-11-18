@@ -6,16 +6,19 @@
 
 ## 🎮 Overview
 
-**Rift Rewind** is an AI-powered agent that transforms League of Legends match history into personalized, insightful, and shareable year-end recaps. Using AWS Generative AI services and the Riot Games API, it helps players reflect, learn, and celebrate their journey through the Rift.
+**Rift Rewind** is an AI-powered web application that transforms your League of Legends match history into personalized year-end recaps. Built with AWS Generative AI (Bedrock) and the Riot Games API, it analyzes your gameplay and creates beautiful, shareable insights about your journey through the Rift.
+
+🌐 **Live Demo**: [Try it here!](#) *(Coming soon)*
 
 ### What Makes It Different?
 
 Unlike traditional stat-tracking sites (op.gg, u.gg), Rift Rewind uses **AWS AI** to:
-- 🧠 Generate personalized narratives about your playstyle evolution
-- 📈 Identify persistent patterns and growth opportunities
-- 🎨 Create beautiful, shareable social media content
-- 🤝 Compare playstyles with friends and find synergies
-- 🏆 Celebrate standout moments with AI-generated highlight summaries
+- 🧠 **Personalized Narratives** - AI-generated stories about your playstyle evolution
+- 🔍 **Hidden Gems** - Discover surprising patterns you never knew existed
+- 🎭 **Personality Analysis** - Get matched with pro player archetypes
+- 😂 **Roast Mode** - Hilarious AI-generated roasts based on your actual stats
+- 📊 **Advanced Analytics** - Deep dive into performance metrics, trends, and insights
+- 🎨 **Shareable Content** - Beautiful cards optimized for social media
 
 ## 🏗️ Architecture
 
@@ -59,14 +62,43 @@ Unlike traditional stat-tracking sites (op.gg, u.gg), Rift Rewind uses **AWS AI*
 - Animated stat progressions
 - Comparative friend leaderboards
 
-## 📋 Prerequisites
+## ⚡ Quick Start (5 Minutes)
 
-- **Python 3.11+**
-- **Node.js 18+**
-- **AWS Account** with Bedrock access
-- **Riot Games API Key** (get one at [developer.riotgames.com](https://developer.riotgames.com))
+The fastest way to get Rift Rewind running on your machine!
 
-## 🛠️ Installation
+### Prerequisites
+- **Docker & Docker Compose** (recommended) OR **Python 3.11+ & Node.js 18+**
+- **Riot Games API Key** - [Get free key here](https://developer.riotgames.com)
+- **AWS Account** with Bedrock access - [Sign up here](https://aws.amazon.com/bedrock/)
+
+### Setup Steps
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/rift-rewind.git
+cd rift-rewind
+
+# 2. Configure environment variables
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+# 3. Edit backend/.env and add your credentials:
+#    - RIOT_API_KEY=your_key_here
+#    - AWS_ACCESS_KEY_ID=your_key
+#    - AWS_SECRET_ACCESS_KEY=your_secret
+
+# 4. Start the application with Docker
+docker-compose up
+
+# 5. Open your browser
+# Visit: http://localhost
+```
+
+That's it! 🎮 Try searching for **"Doublelift#NA1"** to see a demo!
+
+---
+
+## 🛠️ Detailed Installation
 
 ### 1. Clone the Repository
 
@@ -285,24 +317,41 @@ control around objectives!"
 
 ```
 rift-rewind/
-├── backend/
-│   ├── main.py              # FastAPI app entry
-│   ├── services/
-│   │   ├── riot_api.py      # Riot Games API client
-│   │   ├── aws_bedrock.py   # AWS Bedrock integration
-│   │   └── analyzer.py      # Data analysis logic
-│   ├── models/
-│   │   └── schemas.py       # Pydantic models
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── services/        # API clients
-│   │   └── App.jsx
-│   ├── package.json
-│   └── vite.config.js
-├── LICENSE
-└── README.md
+├── README.md                    # You are here!
+├── LICENSE                      # MIT License
+├── docker-compose.yml          # Docker orchestration
+├── .gitignore                  # Git ignore rules
+│
+├── backend/                    # Python FastAPI Backend
+│   ├── main.py                # FastAPI app entry point
+│   ├── requirements.txt       # Python dependencies
+│   ├── Dockerfile            # Backend container config
+│   ├── .env.example          # Environment template (copy to .env)
+│   ├── services/             # Core business logic
+│   │   ├── riot_api.py       # Riot Games API integration
+│   │   ├── aws_bedrock.py    # AWS Bedrock AI integration
+│   │   ├── analyzer.py       # Match data analysis
+│   │   ├── model_selector.py # AI model selection
+│   │   ├── pattern_detector.py   # Pattern detection
+│   │   ├── advanced_analytics.py # Advanced metrics
+│   │   └── additional_analytics.py # Additional stats
+│   └── models/
+│       └── schemas.py        # Pydantic data models
+│
+└── frontend/                  # React + Vite Frontend
+    ├── package.json          # Node dependencies
+    ├── vite.config.js       # Vite build config
+    ├── tailwind.config.js   # Tailwind CSS config
+    ├── Dockerfile           # Frontend container config
+    ├── nginx.conf           # Web server config
+    ├── .env.example         # Environment template (copy to .env)
+    └── src/
+        ├── main.jsx         # React entry point
+        ├── App.jsx          # Main app component
+        ├── components/      # Reusable UI components
+        ├── pages/           # Page components
+        ├── services/        # API client
+        └── utils/           # Helper functions
 ```
 
 ## 🔐 Security & Best Practices
@@ -359,19 +408,22 @@ This project targets **FOUR** prize categories:
 - Cost optimization showcase
 - Live demo of all prize features
 
-See `DEMO_SCRIPT.md` for detailed script.
-
 ---
 
-## 📄 Methodology
+## 📚 Documentation
 
-See `METHODOLOGY.md` for comprehensive technical documentation including:
-- Data collection strategies
-- Statistical analysis methods
-- AI implementation details
-- Cost breakdown and optimization
-- Challenges overcome
-- Novel discoveries
+All detailed documentation, deployment guides, and development notes are available in the `documentation` branch:
+
+```bash
+# Switch to documentation branch to view all guides
+git checkout documentation
+```
+
+**Available Documentation:**
+- **Deployment Guides** - AWS deployment, Docker setup, production configuration
+- **Optimization Notes** - Performance improvements, cost optimization strategies
+- **Development Logs** - Feature enhancements, bug fixes, iterations
+- **AWS Monitoring** - Cost tracking, CloudWatch setup, budget alerts
 
 ---
 

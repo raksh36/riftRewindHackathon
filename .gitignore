@@ -26,7 +26,16 @@ ENV/
 # Environment variables
 .env
 .env.local
+.env.production
 .env.*.local
+
+# AWS credentials and keys (IMPORTANT: Never commit these!)
+*.pem
+*.key
+*.ppk
+aws-credentials.json
+backend-aws-info.txt
+rift-rewind-key.pem
 
 # Node
 node_modules/
@@ -58,4 +67,11 @@ logs/
 htmlcov/
 .pytest_cache/
 
+# Deployment artifacts
+*.zip
+backend-deploy.zip
+frontend-build.tar.gz
+
+# Documentation (keep in documentation branch)
+REPO_CLEANUP_PLAN.md
 
