@@ -8,7 +8,7 @@
 
 **Rift Rewind** is an AI-powered web application that transforms your League of Legends match history into personalized year-end recaps. Built with AWS Generative AI (Bedrock) and the Riot Games API, it analyzes your gameplay and creates beautiful, shareable insights about your journey through the Rift.
 
-🌐 **Live Demo**: [Try it here!](#) *(Coming soon)*
+🌐 **Live Demo**: [https://raksh36.github.io/riftRewindHackathon/](https://raksh36.github.io/riftRewindHackathon/)
 
 ### What Makes It Different?
 
