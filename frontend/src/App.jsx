@@ -8,7 +8,7 @@ import './App.css'
 
 function App() {
   return (
-    <Router>
+    <Router basename="/riftRewindHackathon">
       <div className="min-h-screen bg-rift-dark">
         <Toaster 
           position="top-right"
